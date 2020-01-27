@@ -1,4 +1,4 @@
-;;; Chapter 3 - Practical: A Simple Database
+;;;; Chapter 3 - Practical: A Simple Database
 
 (defvar *db* nil)
 
@@ -52,7 +52,7 @@
       (dump-db))))
 
 
-;; querying the database
+;;; querying the database
 
 ;; (defun select-by (selector-fn)
 ;;   (remove-if-not selector-fn *db*))
@@ -74,7 +74,7 @@
 ;; (defun select (selector-fn)
 ;;   (remove-if-not selector-fn *db*))
 
-;; updating records
+;;; updating records
 
 (defun update (selector-fn &key title artist rating (ripped nil ripped-p))
   (setf *db*
@@ -87,7 +87,7 @@
 	       (if ripped-p (setf (getf row :ripped) ripped)))
 	     row) *db*)))
 
-;; deleting rows
+;;; deleting rows
 
 (defun delete-rows (selector-fn)
   (setf *db* (remove-if selector-fn *db*)))

@@ -1,4 +1,4 @@
-;;; Chapter 4 - Syntax and Semantics
+;;;; Chapter 4 - Syntax and Semantics
 
 (defun print-list (list)
   (dolist (e list)

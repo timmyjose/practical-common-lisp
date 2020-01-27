@@ -1,4 +1,4 @@
-;;; Chpater 2 - A tour of the REPL
+;;;; Chpater 2 - A tour of the REPL
 
 (defun factorial (n)
   (labels ((f (acc n)
