@@ -113,7 +113,7 @@
 (assert (equalp (sort (vector "foo" "bar" "baz") #'string>=)
 		#("foo" "baz" "bar")))
 
-;;; not that the following idiom is required for destructive functions like sort, stable-sort, and merge:
+;;; note that the following idiom is required for destructive functions like sort, stable-sort, and merge:
 ;;;
 ;;; (setf sequence (sort sequence key))
 ;;;
@@ -121,7 +121,7 @@
 
 (defparameter *numbers* '(1 2 -10 2 4 5 5))
 
-(setf *number* (sort *numbers* #'<))
+(setf *numbers* (sort *numbers* #'<))
 (assert (equalp *numbers* '(-10 1 2 2 4 5 5)))
 
 (setf *numbers* (reverse *numbers*))
@@ -129,3 +129,95 @@
 (setf *numbers* (stable-sort *numbers* #'>=))
 (assert (equalp *numbers* '(5 5 4 2 2 1 -10)))
 
+;;; subsequence manipulations
+
+(assert (string= (subseq "Hello, world"  0 12) "Hello, world"))
+(assert (string= (subseq "Hello, world" 4 8) "o, w"))
+(assert (string= (subseq "Hello, world" 0) "Hello, world"))
+
+(defparameter *x* (copy-seq "foobarbaz"))
+
+(setf (subseq *x* 3 6) "xxx")
+(assert (string= *x* "fooxxxbaz"))
+
+(setf (subseq *x* 3 6) "abcd")
+(assert (string= *x* "fooabcbaz"))
+
+(setf (subseq *x* 3 6) "xx")
+(assert (string= *x* "fooxxcbaz"))
+
+(assert (= (search "bar" "foobarbaz") 3))
+(assert (= (position #\b "foobarbaz") 3))
+(assert (= (mismatch "foobarbaz" "foom") 3))
+(assert (null (mismatch "hello" "hello")))
+
+;;; sequence predicates
+
+(assert (every #'evenp #(2 4 6 8 10)))
+(assert (some #'evenp #(1 2 3 4 5)))
+(assert (notevery #'evenp #(1 2 3 4 5)))
+(assert (notany #'oddp '(2 4 6 8 10)))
+
+;; note: pairwise from the sequences in this case
+(assert (every #'> #(2 4 6 8) #(1 2 3 5)))
+(assert (notevery #'> #(2 3 4 5) #(3 4 5 6)))
+(assert (notany #'< #(5 6 7 8) #(1 2 3 4)))
+(assert (some #'> #(1 2 3 4) #(0 3 4 5)))
+
+;;; sequence-mapping functions
+
+(assert (equalp (map 'vector #'* #(1 2 3 4 5) #(5 4 3 2 1))
+		#(5 8 9 8 5)))
+
+(assert (equalp (mapcar #'+ '(1 2 3 4 5) '(5 4 3 2 1))
+		'(6 6 6 6 6)))
+
+(assert (= (reduce #'+ (loop for i from 1 to 10 collecting i)) 55))
+(assert (= (reduce #'* (loop for i from 1 to 10 collecting i)) 3628800))
+(assert (= (reduce #'+ #(1 2 3 4 5 6 7 8 9 10) :initial-value 100) 155))
+
+;;; hash tables
+
+(defun hash-table-example ()
+  (let ((h (make-hash-table :test #'eql)))
+    (assert (null (gethash 'foo h)))
+    (setf (gethash 'foo h) 'bar)
+    (assert (eql 'bar (gethash 'foo h)))))
+
+;; note that gethash returns multiple values - the first one is the value of the retrieval call, and the second
+;; is whether the value was present or not - useful when the value returned is nil.
+
+(defun show-value (key hash-table)
+  (multiple-value-bind (value present) (gethash key hash-table)
+    (if present
+	(format nil "Key ~a was present in the hash table with value ~a" key value)
+	(format nil "Key ~a was not present in the hash table" key))))
+
+(defun extended-hash-table-example ()
+  (let ((h (make-hash-table :test #'eql)))
+    (format t (show-value 'foo h))
+    (terpri)
+    (setf (gethash 'foo h) 'bar)
+    (format t (show-value 'foo h))
+    (terpri)
+    (setf (gethash 'bar h) nil)
+    (format t (show-value 'bar h))
+    (terpri)
+    (remhash 'bar h)
+    (format t (show-value 'bar h))
+    (maphash #'(lambda (k v) (format t "~a: ~a~%" k v)) h)
+    (clrhash h)))
+
+(defun display-hash-example ()
+  (let ((h (make-hash-table :test #'equal)))
+    (loop for word in '("hello" "world" "nice" "to" "meet" "you")
+       do (setf (gethash word h) (length word)))
+    (maphash #'(lambda (k v) (format t "~a: ~a~%" k v)) h)))
+
+(defun display-hash-using-loop-example ()
+  (let ((phone-book (make-hash-table :test #'equal)))
+    (setf (gethash "bob" phone-book) "123-4567")
+    (setf (gethash "alice" phone-book) "987-6543")
+    (setf (gethash "carter" phone-book) "434-1214")
+    (loop for name being the hash-keys in phone-book using (hash-value phone)
+       do (format t "~a: ~a~%" name phone))))
